@@ -35,8 +35,8 @@ Occupancy = Density * Length;
 
 Netflow = Inflow - Outflow;
 
-NetflowFiner = interp1(linspace(0,24*3600,length(Netflow)),Netflow,0:5:24*3600,'spline');
-OccupancyFiner = interp1(linspace(0,24*3600,length(Occupancy)),Occupancy,0:5:24*3600,'spline');
+NetflowFiner = interp1(linspace(0,24*3600,length(Netflow)),Netflow,0:5:24*3600,'linear');
+OccupancyFiner = interp1(linspace(0,24*3600,length(Occupancy)),Occupancy,0:5:24*3600,'linear');
 [ RegressedSignal, BiasSignal ] = DTbiasEstimation( NetflowFiner, OccupancyFiner );
 end
 
