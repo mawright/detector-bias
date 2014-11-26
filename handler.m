@@ -4,6 +4,7 @@ Inflow = 0;
 Outflow = 0;
 
 if strcmpi(LoopData.Units,'SI')
+    timeConversionFactor = 1;
     distanceConversionFactor = 1609.34; % meters in 1 mile
 end
 
@@ -32,7 +33,11 @@ Length = abs( DownstreamPostmile - UpstreamPostmile ) * distanceConversionFactor
 
 Occupancy = Density * Length;
 
-[ RegressedSignal, BiasSignal ] = DTbiasEstimation( Inflow - Outflow, Occupancy );
+Netflow = Inflow - Outflow;
+
+NetflowFiner = interp1(linspace(0,24*3600,length(Netflow)),Netflow,0:5:24*3600,'spline');
+OccupancyFiner = interp1(linspace(0,24*3600,length(Occupancy)),Occupancy,0:5:24*3600,'spline');
+[ RegressedSignal, BiasSignal ] = DTbiasEstimation( NetflowFiner, OccupancyFiner );
 end
 
 function filledInTimeSeries = interpolateForNans( inputTimeSeries )

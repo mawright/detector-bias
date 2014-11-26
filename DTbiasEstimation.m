@@ -4,8 +4,8 @@ notConverged = true;
 
 nTime = numel(Netflow);
 
-Gamma = .005;
-x = linspace(-3,3,30);
+Gamma = .05;
+x = linspace(-3,3,1000);
 Phik = 1/sqrt(2*pi)*exp(-x.^2)';
 
 Phi = buildKernelMatrix( Phik, nTime);
@@ -13,7 +13,7 @@ Phi = buildKernelMatrix( Phik, nTime);
 c_hat = zeros(numel(Netflow),1);
 m_hat = zeros(size(c_hat));
 
-stoppingThreshold = .01;
+stoppingThreshold = .07;
 iterCount = 0;
 
 while notConverged
@@ -22,18 +22,22 @@ while notConverged
     
     for t = 1:nTime-1
         
+        nonzeroKernelIndeces = Phi(:,t) ~= 0;
+        
         n_apriori(t+1) = Density(t) + m_hat(t) + Netflow(t);
         
         n_tilde_apriori(t+1) = n_apriori(t+1) - Density(t+1);
         
-        n_tilde_aposteriori(t+1) = n_tilde_apriori(t+1) / (1 + Phi(:,t)' * Gamma * Phi(:,t));
+        n_tilde_aposteriori(t+1) = n_tilde_apriori(t+1) / ...
+                (1 + Phi(nonzeroKernelIndeces,t)' * Gamma * Phi(nonzeroKernelIndeces,t));
         
 %         n_tilde_aposteriori(t+1) = update_n_tilde( n_tilde_apriori(t+1), Phi(:,t), Gamma );
         
 %         c_hat = update_c_hat(c_hat, Gamma, Phi(:,t), n_tilde_aposteriori(t+1));
         
-        c_hat = c_hat + Gamma * Phi(:,t) * n_tilde_aposteriori(t+1);
-        m_hat(t) = Phi(:,t)' * c_hat;
+        c_hat(nonzeroKernelIndeces) = c_hat(nonzeroKernelIndeces) -...
+                Gamma * Phi(nonzeroKernelIndeces,t) * n_tilde_aposteriori(t+1);
+        m_hat(t) = Phi(nonzeroKernelIndeces,t)' * c_hat(nonzeroKernelIndeces);
                 
     end
         
@@ -49,8 +53,9 @@ while notConverged
     figure(2);
 %     plot(1:length(n_tilde_aposteriori),n_tilde_aposteriori,1:length(n_apriori),n_apriori,1:length(Density),Density);
 %     legend('n error','nhat','measured n');
-    plot(1:length(n_apriori), n_apriori,1:length(Density),Density);
-    legend('nhat','Measured n');
+%     plot(1:length(n_apriori), n_apriori,1:length(Density),Density+Netflow);
+%     legend('nhat','n');
+    plot(n_tilde_aposteriori); legend('ntilde');
     pause(.1);
 end
 
