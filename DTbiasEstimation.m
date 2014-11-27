@@ -31,10 +31,6 @@ while notConverged
         n_tilde_aposteriori(t+1) = n_tilde_apriori(t+1) / ...
                 (1 + Phi(nonzeroKernelIndeces,t)' * Gamma * Phi(nonzeroKernelIndeces,t));
         
-%         n_tilde_aposteriori(t+1) = update_n_tilde( n_tilde_apriori(t+1), Phi(:,t), Gamma );
-        
-%         c_hat = update_c_hat(c_hat, Gamma, Phi(:,t), n_tilde_aposteriori(t+1));
-        
         c_hat(nonzeroKernelIndeces) = c_hat(nonzeroKernelIndeces) +...
                 Gamma * Phi(nonzeroKernelIndeces,t) * n_tilde_aposteriori(t+1);
         m_hat(t) = Phi(nonzeroKernelIndeces,t)' * c_hat(nonzeroKernelIndeces);
@@ -65,12 +61,4 @@ Phi(nTime+1:size(Phi,1),:) = [];
 
 normalizingFactorMatrix = repmat(sum(Phi,1),size(Phi,1),1);
 Phi = Phi ./ normalizingFactorMatrix;
-end
-
-function n_tilde_aposteriori = update_n_tilde( n_tilde_apriori, Phik, Gamma )
-n_tilde_aposteriori = n_tilde_apriori / (1 + Phik' * Gamma * Phik);
-end
-
-function c_hat = update_c_hat( c_hat_in, Gamma, Phik, n_tilde_aposteriori )
-c_hat = c_hat_in + Gamma * Phik * n_tilde_aposteriori;
 end
