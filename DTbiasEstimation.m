@@ -1,47 +1,47 @@
-function [m_hat, c_hat] = DTbiasEstimation( Netflow, Density )
+function [biasTimeseries, regressors] = DTbiasEstimation( Netflow, Density )
 
 notConverged = true;
 
 nTime = numel(Netflow);
 
-Gamma = .05;
+Gain = .05;
 x = linspace(-3,3,1000);
 Phik = 1/sqrt(2*pi)*exp(-x.^2)';
 
 Phi = buildKernelMatrix( Phik, nTime);
 
-c_hat = zeros(numel(Netflow),1);
-m_hat = zeros(size(c_hat));
+regressors = zeros(numel(Netflow),1);
+biasTimeseries = zeros(size(regressors));
 
 stoppingThreshold = .07;
 iterCount = 0;
 
 while notConverged
     
-    lastm = m_hat;
+    lastBiasEstimate = biasTimeseries;
     
     for t = 1:nTime-1
         
         nonzeroKernelIndeces = Phi(:,t) ~= 0;
         
-        n_apriori(t+1) = Density(t) + m_hat(t) + Netflow(t);
+        n_apriori(t+1) = Density(t) + biasTimeseries(t) + Netflow(t);
         
         n_tilde_apriori(t+1) = Density(t+1) - n_apriori(t+1);
         
         n_tilde_aposteriori(t+1) = n_tilde_apriori(t+1) / ...
-                (1 + Phi(nonzeroKernelIndeces,t)' * Gamma * Phi(nonzeroKernelIndeces,t));
+                (1 + Phi(nonzeroKernelIndeces,t)' * Gain * Phi(nonzeroKernelIndeces,t));
         
-        c_hat(nonzeroKernelIndeces) = c_hat(nonzeroKernelIndeces) +...
-                Gamma * Phi(nonzeroKernelIndeces,t) * n_tilde_aposteriori(t+1);
-        m_hat(t) = Phi(nonzeroKernelIndeces,t)' * c_hat(nonzeroKernelIndeces);
+        regressors(nonzeroKernelIndeces) = regressors(nonzeroKernelIndeces) +...
+                Gain * Phi(nonzeroKernelIndeces,t) * n_tilde_aposteriori(t+1);
+        biasTimeseries(t) = Phi(nonzeroKernelIndeces,t)' * regressors(nonzeroKernelIndeces);
                 
     end
         
-    if norm(m_hat-lastm) < stoppingThreshold
+    if norm(biasTimeseries-last) < stoppingThreshold
         notConverged = false;
     end
     iterCount = iterCount + 1;
-    fprintf('Iter %g: norm of m difference vector is %.5f\n', iterCount, norm(m_hat-lastm));
+    fprintf('Iter %g: norm of m difference vector is %.5f\n', iterCount, norm(biasTimeseries-lastBiasEstimate));
 end
 
 end
