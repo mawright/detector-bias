@@ -37,7 +37,7 @@ while notConverged
                 
     end
         
-    if norm(biasTimeseries-last) < stoppingThreshold
+    if norm(biasTimeseries-lastBiasEstimate) < stoppingThreshold
         notConverged = false;
     end
     iterCount = iterCount + 1;
